@@ -104,8 +104,8 @@ def haracteristici(
         if abs(i-j) > system.d:
             P_per += k
     L = L1 + L2#Общее число требований в системе
-    Lq1 = lam1**2/(system.mu1*(system.mu1-lam1))#Среднее число требования ожидающий обслуживание в первой очереди
-    Lq2 = lam2**2/(system.mu2*(system.mu2-lam2))#Среднее число требования ожидающий обслуживание в первой очереди
+    Lq1 = p1**2/(1-p1)#Среднее число требования ожидающий обслуживание в первой очереди
+    Lq2 = p2**2/(1-p2)#Среднее число требования ожидающий обслуживание в первой очереди
     W1 = L1/lam1#Среднее время пребывания в первой очереди
     W2 = L2/lam2#Среднее время пребывания во второй очереди
     Wq1 = Lq1/lam1  #Среднее время ожидания в первой очереди до начала обслуживания
@@ -139,21 +139,26 @@ def haracteristici(
 
 def expirement1(N=100000):
 
-    keys_to_print = ["lam","lam1", "lam2", "p", "L", "Lq1", "Lq2", "W", "Wq1", "Wq2", "P_per"]
+    keys_to_print = ["lam","lam1", "lam2", "p", "L",
+                     "Lq1", "Lq2", "L1", "L2", "W", "Wq1", "Wq2",
+                     "P_per", "lam"]
     for i in keys_to_print:
         print(f"{i:<10}", end='')
     print()
-    for i in range(0, 100, 10):
-        system = TwoDeviceSystem(lam=50, mu1=100, mu2=100, dt=0.00005, d=1)
+    for i in range(0, 150, 2):
+        system = TwoDeviceSystem(lam=1, mu1=100, mu2=100, dt=0.00005, d=10)
         system.lam += i
         counter = defaultdict(int)
         for step in range(N):
             system.prihod()
-            system.perehod()
-            system.pribor_finish()
+
             och1 = system.ochered1.dlina
             och2 = system.ochered2.dlina
             counter[(och1, och2)] += 1
+            system.perehod()
+
+            system.pribor_finish()
+
 
 
         for keys in keys_to_print:
