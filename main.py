@@ -150,6 +150,11 @@ def haracteristici(
         "W": W,
         "Nper": Nper,
         "prihod": system.counter_prihodov,
+        "d":system.d,
+        "len1":len(system.ochered1.spisok),
+        "len2": len(system.ochered2.spisok),
+        "mu2":system.mu2
+
     }
 
     return results
@@ -186,54 +191,237 @@ def expirement1(N=100000):
         print()
 
 
+def expirement2(N=100000, update_every=500):
+    keys_to_print = ["d", "L", "L1", "L2",
+                     "W", "W1", "W2", "P_per", "len1", "len2"]
+    for i in keys_to_print:
+        print(f"{i:<10}", end='')
+    print()
+
+    for i in range(0,20,1):
+        system = TwoDeviceSystem(lam=170, mu1=100, mu2=100, dt=0.00005, d=1)
+        system.d += i
+        counter = defaultdict(int)
+
+        # --- отдельное окно для текущего d ---
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.set_xlabel("N (такт)")
+        ax.set_ylabel("Длина очереди")
+        ax.set_title(f"d = {system.d}")
+        ax.grid(True, alpha=0.3)
+
+        line1, = ax.plot([], [], color='blue', label="Q1")
+        line2, = ax.plot([], [], color='red', linestyle='--', label="Q2")
+        ax.legend(loc='upper right')
+
+        history_L1 = []
+        history_L2 = []
+        x_axis = []
+
+        plt.ion()
+        plt.show(block=False)
+
+        for step in range(N):
+            system.prihod()
+
+            och1 = len(system.ochered1.spisok)
+            och2 = len(system.ochered2.spisok)
+
+            counter[(och1, och2)] += 1
+            system.sum_len_ochered1 += len(system.ochered1.spisok)
+            system.sum_len_ochered2 += len(system.ochered2.spisok)
+
+            history_L1.append(och1)
+            history_L2.append(och2)
+            x_axis.append(step)
+
+            system.perehod()
+            system.pribor_finish()
+
+            if step % update_every == 0:
+                pass
+                skip = max(1, len(x_axis) // 3000)
+                x_vis = x_axis[::skip]
+                y1_vis = history_L1[::skip]
+                y2_vis = history_L2[::skip]
+
+                line1.set_data(x_vis, y1_vis)
+                line2.set_data(x_vis, y2_vis)
+
+                ax.relim()
+                ax.autoscale_view()
+                ax.set_title(f"d = {system.d}, такт {step}/{N}")
+                plt.pause(0.001)
+
+
+        for keys in keys_to_print:
+            print(
+                f"{haracteristici(system, counter, N, system.counter1, system.counter2)[keys]
+                :<10.5f}", end='')
+        print()
+
+        ax.set_title(f"d = {system.d} (готово)")
+        plt.ioff()  # выключаем интерактивный режим
+        plt.show(block=True)  # блокируем, пока вы не закроете окно
+        plt.close(fig)
+
+
+def expirement3(N=100000, update_every=500):
+    keys_to_print = ["mu2", "p", "L","W", "p1", "p2", "P_per"]
+    for i in keys_to_print:
+        print(f"{i:<10}", end='')
+    print()
+
+    for i in range(0,140,20):
+        system = TwoDeviceSystem(lam=100, mu1=100, mu2=40, dt=0.00005, d=10)
+        system.mu2 += i
+        counter = defaultdict(int)
+
+        # --- отдельное окно для текущего d ---
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.set_xlabel("N (такт)")
+        ax.set_ylabel("Длина очереди")
+        ax.set_title(f"mu2 = {system.mu2}")
+        ax.grid(True, alpha=0.3)
+
+        line1, = ax.plot([], [], color='blue', label="Q1")
+        line2, = ax.plot([], [], color='red', linestyle='--', label="Q2")
+        ax.legend(loc='upper right')
+
+        history_L1 = []
+        history_L2 = []
+        x_axis = []
+
+        plt.ion()
+        plt.show(block=False)
+
+        for step in range(N):
+            system.prihod()
+
+            och1 = len(system.ochered1.spisok)
+            och2 = len(system.ochered2.spisok)
+
+            counter[(och1, och2)] += 1
+            system.sum_len_ochered1 += len(system.ochered1.spisok)
+            system.sum_len_ochered2 += len(system.ochered2.spisok)
+
+            history_L1.append(och1)
+            history_L2.append(och2)
+            x_axis.append(step)
+
+            system.perehod()
+            system.pribor_finish()
+
+            if step % update_every == 0:
+                pass
+                skip = max(1, len(x_axis) // 3000)
+                x_vis = x_axis[::skip]
+                y1_vis = history_L1[::skip]
+                y2_vis = history_L2[::skip]
+
+                line1.set_data(x_vis, y1_vis)
+                line2.set_data(x_vis, y2_vis)
+
+                ax.relim()
+                ax.autoscale_view()
+                ax.set_title(f"mu1 = {system.mu1}, mu2 = {system.mu2}, такт {step}/{N}")
+                plt.pause(0.001)
+
+
+        for keys in keys_to_print:
+            print(
+                f"{haracteristici(system, counter, N, system.counter1, system.counter2)[keys]
+                :<10.5f}", end='')
+        print()
+
+        ax.set_title(f"mu1 = {system.mu1}, mu2 = {system.mu2}")
+        plt.ioff()  # выключаем интерактивный режим
+        plt.show(block=True)  # блокируем, пока вы не закроете окно
+        plt.close(fig)
+
+
+def expirement4(N=100000, update_every=500):
+    keys_to_print = ["lam", "p", "L","W", "p1", "p2"]
+    for i in keys_to_print:
+        print(f"{i:<10}", end='')
+    print()
+
+    for i in range(0,200,20):
+        system = TwoDeviceSystem(lam=10, mu1=100, mu2=100, dt=0.00005, d=1000000)
+        system.lam += i
+        counter = defaultdict(int)
+
+        # --- отдельное окно для текущего d ---
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.set_xlabel("N (такт)")
+        ax.set_ylabel("Длина очереди")
+        ax.set_title(f"mu2 = {system.mu2}")
+        ax.grid(True, alpha=0.3)
+
+        line1, = ax.plot([], [], color='blue', label="Q1")
+        line2, = ax.plot([], [], color='red', linestyle='--', label="Q2")
+        ax.legend(loc='upper right')
+
+        history_L1 = []
+        history_L2 = []
+        x_axis = []
+
+        plt.ion()
+        plt.show(block=False)
+
+        for step in range(N):
+            system.prihod()
+
+            och1 = len(system.ochered1.spisok)
+            och2 = len(system.ochered2.spisok)
+
+            counter[(och1, och2)] += 1
+            system.sum_len_ochered1 += len(system.ochered1.spisok)
+            system.sum_len_ochered2 += len(system.ochered2.spisok)
+
+            history_L1.append(och1)
+            history_L2.append(och2)
+            x_axis.append(step)
+
+            system.perehod()
+            system.pribor_finish()
+
+            if step % update_every == 0:
+                pass
+                skip = max(1, len(x_axis) // 3000)
+                x_vis = x_axis[::skip]
+                y1_vis = history_L1[::skip]
+                y2_vis = history_L2[::skip]
+
+                line1.set_data(x_vis, y1_vis)
+                line2.set_data(x_vis, y2_vis)
+
+                ax.relim()
+                ax.autoscale_view()
+                ax.set_title(f"lambda = {system.lam}, такт {step}/{N}")
+                plt.pause(0.001)
+
+
+        for keys in keys_to_print:
+            print(
+                f"{haracteristici(system, counter, N, system.counter1, system.counter2)[keys]
+                :<10.5f}", end='')
+        print()
+
+        ax.set_title(f"lambda = {system.lam}")
+        plt.ioff()  # выключаем интерактивный режим
+        plt.show(block=True)  # блокируем, пока вы не закроете окно
+        plt.close(fig)
+
+
+
 def main():
-    plt.ion()  # включаем интерактивный режим
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    line1, = ax.plot([], [], label="Очередь 1")
-    line2, = ax.plot([], [], label="Очередь 2")
-    ax.set_xlabel("Шаг")
-    ax.set_ylabel("Длина очереди")
-    ax.set_title("Динамика очередей")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
 
-    system = TwoDeviceSystem(lam=1.8, mu1=1, mu2=1, dt=0.00005, d=1)
-
-    history_L1 = []
-    history_L2 = []
-
-    N = 100000
-    update_every = 1000
-
-    counter = defaultdict(int)#Словарь с количеством раз нахождения системы в определенном состоянии
-
-    """for step in range(N):
-        system.prihod()
-        system.perehod()
-        system.pribor_finish()
-
-        '''Расчет вероятности состояний системы'''
-        i = system.ochered1.dlina
-        j = system.ochered2.dlina
-        counter[(i,j)] += 1
-
-        history_L1.append(system.ochered1.dlina)
-        history_L2.append(system.ochered2.dlina)
-
-        if step % update_every == 0:
-            skip = 10
-            x_vis = list(range(0, len(history_L1), skip))
-            line1.set_data(x_vis, history_L1[::skip])
-            line2.set_data(x_vis, history_L2[::skip])
-            ax.relim()
-            ax.autoscale_view()
-            plt.pause(0.001)  # пауза между кадрами
-    haracteristici(system, counter, N, system.counter1, system.counter2)
-    plt.ioff()
-    plt.show()  # в конце оставляем окно открытым"""
-
-    expirement1()
+    #expirement1()
+    #expirement2()
+    #expirement3()
+    expirement4()
 
 if __name__ == "__main__":
     main()
